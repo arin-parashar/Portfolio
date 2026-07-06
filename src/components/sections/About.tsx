@@ -4,7 +4,7 @@ import { ScrollReveal } from '@/components/features/ScrollReveal';
 import { SectionHeading } from '@/components/layout/SectionHeading';
 
 const stats = [
-  { label: 'ROLE', value: 'CS Student', color: '#3B82F6' },
+  { label: 'ROLE', value: 'CS Graduate', color: '#3B82F6' },
   { label: 'EDU', value: 'SRM IST', color: '#10B981' },
   { label: 'YEAR', value: '2026', color: '#8B5CF6' },
   { label: 'CGPA', value: '8.1', color: '#06B6D4' },
@@ -50,7 +50,7 @@ export function About() {
             {/* Bio text */}
             <div className="space-y-4 text-muted-foreground leading-relaxed mb-10">
               <p>
-                Computer Science student at SRM Institute of Science and Technology, graduating in 2026.
+                Computer Science graduate from SRM Institute of Science and Technology (May 2026).
                 Specializing in <span className="text-primary">AI, Computer Vision, Edge AI, Machine Learning,</span> and <span className="text-secondary">Data Engineering</span>.
               </p>
               <p>
