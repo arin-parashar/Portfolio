@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PixelPokeball } from '@/components/pixel-art/PixelPokeball';
+import { ChevronUp } from 'lucide-react';
 
 export function BackToTop() {
   const [isVisible, setIsVisible] = useState(false);
@@ -29,11 +29,14 @@ export function BackToTop() {
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-40 p-2 border-2 border-retro-green/50 bg-card hover:border-retro-green hover:shadow-[0_0_15px_rgba(57,255,20,0.2)] transition-all"
+          className="fixed bottom-6 right-6 z-40 p-2 border-2 border-primary/50 bg-card hover:border-primary hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all"
           aria-label="Back to top"
           style={{ animation: 'float-pixel 3s ease-in-out infinite' }}
         >
-          <PixelPokeball size={28} />
+          {/* 8-bit style arrow */}
+          <div className="w-7 h-7 flex items-center justify-center">
+            <ChevronUp className="w-5 h-5 text-primary" strokeWidth={3} />
+          </div>
         </motion.button>
       )}
     </AnimatePresence>

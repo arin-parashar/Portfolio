@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const bootLines = [
-  { text: '> LOADING ROM...', delay: 100 },
-  { text: '> CHECKING MEMORY... OK', delay: 350 },
-  { text: '> LOADING SPRITES... OK', delay: 600 },
-  { text: '> INIT SOUND CHIP... OK', delay: 850 },
-  { text: '> ALL SYSTEMS GO', delay: 1100 },
+  { text: '> BOOTING KERNEL...', delay: 100 },
+  { text: '> MOUNTING FILESYSTEM... OK', delay: 350 },
+  { text: '> LOADING SERVICES... OK', delay: 600 },
+  { text: '> INITIALIZING ENVIRONMENT... OK', delay: 850 },
+  { text: '> ALL SYSTEMS OPERATIONAL', delay: 1100 },
 ];
 
 const TOTAL_DURATION = 2000;
@@ -34,7 +34,7 @@ export function LoadingScreen() {
       timeouts.push(timeout);
     });
 
-    // Show INSERT COIN after boot
+    // Show SYSTEM READY after boot
     timeouts.push(setTimeout(() => setShowInsertCoin(true), 1400));
 
     // Animate progress
@@ -106,7 +106,7 @@ export function LoadingScreen() {
             ))}
           </div>
 
-          {/* INSERT COIN blink */}
+          {/* SYSTEM READY blink */}
           <AnimatePresence>
             {showInsertCoin && (
               <motion.div
@@ -122,7 +122,7 @@ export function LoadingScreen() {
                     textShadow: '0 0 10px rgba(255,215,0,0.5)',
                   }}
                 >
-                  INSERT COIN
+                  SYSTEM READY
                 </p>
               </motion.div>
             )}
