@@ -1,101 +1,165 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export function CustomCursor() {
-  const [pos, setPos] = useState({ x: -100, y: -100 });
-  const [isHovering, setIsHovering] = useState(false);
-  const [isClicking, setIsClicking] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const posRef = useRef({ x: -100, y: -100 });
+  const hoverRef = useRef(false);
+  const clickRef = useRef(false);
+  const visibleRef = useRef(false);
+  const rafRef = useRef<number>(0);
+  const mountedRef = useRef(false);
+
+  const updateCursorDOM = useCallback(() => {
+    const el = cursorRef.current;
+    if (!el) return;
+
+    const { x, y } = posRef.current;
+    const hovering = hoverRef.current;
+    const clicking = clickRef.current;
+
+    // Use translate3d for GPU-accelerated positioning
+    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+    // Update visual states
+    const color = hovering ? '#39FF14' : '#e0e0e0';
+    const glow = hovering ? 'rgba(57,255,20,0.6)' : 'rgba(224,224,224,0.3)';
+    const dotSize = clicking ? 6 : 4;
+    const armLen = hovering ? 10 : 7;
+
+    const dot = el.children[0] as HTMLElement;
+    const arms = [el.children[1], el.children[2], el.children[3], el.children[4]] as HTMLElement[];
+
+    if (dot) {
+      dot.style.width = `${dotSize}px`;
+      dot.style.height = `${dotSize}px`;
+      dot.style.left = `${-dotSize / 2}px`;
+      dot.style.top = `${-dotSize / 2}px`;
+      dot.style.backgroundColor = color;
+      dot.style.boxShadow = `0 0 6px ${glow}`;
+    }
+
+    // Top arm
+    if (arms[0]) {
+      arms[0].style.height = `${armLen}px`;
+      arms[0].style.top = `${-(armLen + 3)}px`;
+      arms[0].style.backgroundColor = color;
+      arms[0].style.boxShadow = `0 0 4px ${glow}`;
+    }
+    // Bottom arm
+    if (arms[1]) {
+      arms[1].style.height = `${armLen}px`;
+      arms[1].style.backgroundColor = color;
+      arms[1].style.boxShadow = `0 0 4px ${glow}`;
+    }
+    // Left arm
+    if (arms[2]) {
+      arms[2].style.width = `${armLen}px`;
+      arms[2].style.left = `${-(armLen + 3)}px`;
+      arms[2].style.backgroundColor = color;
+      arms[2].style.boxShadow = `0 0 4px ${glow}`;
+    }
+    // Right arm
+    if (arms[3]) {
+      arms[3].style.width = `${armLen}px`;
+      arms[3].style.backgroundColor = color;
+      arms[3].style.boxShadow = `0 0 4px ${glow}`;
+    }
+  }, []);
 
   useEffect(() => {
-    // Don't show on touch devices
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(hover: none)').matches) return;
 
-    setIsVisible(true);
+    mountedRef.current = true;
+    visibleRef.current = true;
+    if (cursorRef.current) {
+      cursorRef.current.style.display = 'block';
+    }
 
     const onMove = (e: MouseEvent) => {
-      setPos({ x: e.clientX, y: e.clientY });
+      posRef.current = { x: e.clientX, y: e.clientY };
+      // Batch DOM updates with rAF — only schedule one frame at a time
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(updateCursorDOM);
     };
 
-    const onDown = () => setIsClicking(true);
-    const onUp = () => setIsClicking(false);
-
-    window.addEventListener('mousemove', onMove, { passive: true });
-    window.addEventListener('mousedown', onDown);
-    window.addEventListener('mouseup', onUp);
-
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('mouseup', onUp);
+    const onDown = () => {
+      clickRef.current = true;
+      requestAnimationFrame(updateCursorDOM);
     };
-  }, []);
+    const onUp = () => {
+      clickRef.current = false;
+      requestAnimationFrame(updateCursorDOM);
+    };
 
-  // Track hover on interactive elements
-  useEffect(() => {
-    if (!isVisible) return;
-
+    // Hover tracking for interactive elements
     const selector = 'a, button, [role="button"], input, textarea, select, [data-cursor-hover]';
 
-    const onEnter = () => setIsHovering(true);
-    const onLeave = () => setIsHovering(false);
+    const onEnter = () => {
+      hoverRef.current = true;
+      requestAnimationFrame(updateCursorDOM);
+    };
+    const onLeave = () => {
+      hoverRef.current = false;
+      requestAnimationFrame(updateCursorDOM);
+    };
 
-    const addListeners = () => {
+    const addHoverListeners = () => {
       document.querySelectorAll(selector).forEach((el) => {
         el.addEventListener('mouseenter', onEnter);
         el.addEventListener('mouseleave', onLeave);
       });
     };
 
-    addListeners();
-
-    const observer = new MutationObserver(addListeners);
+    addHoverListeners();
+    const observer = new MutationObserver(addHoverListeners);
     observer.observe(document.body, { childList: true, subtree: true });
 
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
+
     return () => {
+      cancelAnimationFrame(rafRef.current);
       observer.disconnect();
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup', onUp);
       document.querySelectorAll(selector).forEach((el) => {
         el.removeEventListener('mouseenter', onEnter);
         el.removeEventListener('mouseleave', onLeave);
       });
     };
-  }, [isVisible]);
+  }, [updateCursorDOM]);
 
-  if (!isVisible) return null;
-
-  const size = isHovering ? 28 : 20;
-  const armLen = isHovering ? 10 : 7;
   const armWidth = 2;
-  const dotSize = isClicking ? 6 : 4;
-  const color = isHovering ? '#39FF14' : '#e0e0e0';
-  const glowColor = isHovering ? 'rgba(57,255,20,0.6)' : 'rgba(224,224,224,0.3)';
 
   return (
     <div
+      ref={cursorRef}
       style={{
         position: 'fixed',
-        left: pos.x,
-        top: pos.y,
+        left: 0,
+        top: 0,
         width: 0,
         height: 0,
         zIndex: 9999,
         pointerEvents: 'none',
-        transition: isClicking ? 'none' : undefined,
+        display: 'none',
+        willChange: 'transform',
       }}
     >
       {/* Center dot */}
       <div
         style={{
           position: 'absolute',
-          width: dotSize,
-          height: dotSize,
-          backgroundColor: color,
-          left: -dotSize / 2,
-          top: -dotSize / 2,
-          boxShadow: `0 0 6px ${glowColor}`,
-          transition: 'width 0.1s, height 0.1s, left 0.1s, top 0.1s',
+          width: 4,
+          height: 4,
+          backgroundColor: '#e0e0e0',
+          left: -2,
+          top: -2,
         }}
       />
       {/* Top arm */}
@@ -103,11 +167,10 @@ export function CustomCursor() {
         style={{
           position: 'absolute',
           width: armWidth,
-          height: armLen,
-          backgroundColor: color,
+          height: 7,
+          backgroundColor: '#e0e0e0',
           left: -armWidth / 2,
-          top: -(armLen + 3),
-          boxShadow: `0 0 4px ${glowColor}`,
+          top: -10,
         }}
       />
       {/* Bottom arm */}
@@ -115,35 +178,32 @@ export function CustomCursor() {
         style={{
           position: 'absolute',
           width: armWidth,
-          height: armLen,
-          backgroundColor: color,
+          height: 7,
+          backgroundColor: '#e0e0e0',
           left: -armWidth / 2,
           top: 3,
-          boxShadow: `0 0 4px ${glowColor}`,
         }}
       />
       {/* Left arm */}
       <div
         style={{
           position: 'absolute',
-          width: armLen,
+          width: 7,
           height: armWidth,
-          backgroundColor: color,
-          left: -(armLen + 3),
+          backgroundColor: '#e0e0e0',
+          left: -10,
           top: -armWidth / 2,
-          boxShadow: `0 0 4px ${glowColor}`,
         }}
       />
       {/* Right arm */}
       <div
         style={{
           position: 'absolute',
-          width: armLen,
+          width: 7,
           height: armWidth,
-          backgroundColor: color,
+          backgroundColor: '#e0e0e0',
           left: 3,
           top: -armWidth / 2,
-          boxShadow: `0 0 4px ${glowColor}`,
         }}
       />
     </div>
