@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist_Mono, Press_Start_2P, VT323 } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { Providers } from '@/components/providers';
 import './globals.css';
 
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`dark ${pressStart2P.variable} ${vt323.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
